@@ -11,12 +11,12 @@
         p.subtitle { text-align: center; color: #7f8c8d; font-size: 0.85rem; margin-top: 0; margin-bottom: 15px; }
         .main-layout { display: flex; flex-direction: column; gap: 15px; align-items: center; }
         .controls { width: 100%; display: flex; flex-direction: column; gap: 12px; }
-        .control-group { background: #f8f9fa; padding: 10px; border-radius: 8px; border-left: 5px solid #3498db; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; color: #34495e; font-size: 0.9rem; }
+        .control-group { background: #f8f9fa; padding: 3px; border-radius: 8px; border-left: 5px solid #3498db; }
+        label { display: block; font-weight: bold; margin-bottom: 1px; color: #34495e; font-size: 0.9rem; }
         input[type="range"] { width: 100%; margin-bottom: 2px; }
         .value-display { font-size: 0.85em; color: #e67e22; font-weight: bold; }
         canvas { background: #2c3e50; border-radius: 8px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); display: block; }
-        .results { padding: 10px; background: #e8f4f8; border-radius: 8px; font-size: 0.95rem; text-align: center; font-weight: bold; }
+        .results { padding: 3px; background: #e8f4f8; border-radius: 8px; font-size: 0.95rem; text-align: center; font-weight: bold; }
         .math-box { font-style: italic; background: #fff; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; border: 1px solid #ddd; font-size: 1.1rem; }
     </style>
 </head>
@@ -24,11 +24,10 @@
 
 <div class="container">
     <h1>Waga Skręceń Coulomba</h1>
-    <p class="subtitle">Wirtualne laboratorium badawcze – układ pionowy na telefon</p>
 
     <div class="main-layout">
         <!-- Wizualizacja graficzna Canvas w pionie (szerokość mniejsza niż wysokość) -->
-        <canvas id="simCanvas" width="360" height="420"></canvas>
+        <canvas id="simCanvas" width="360" height="380"></canvas>
 
         <!-- Panel sterowania parametrami na dole -->
         <div class="controls">
