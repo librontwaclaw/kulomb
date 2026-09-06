@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wirtualne Laboratorium: Waga Skręceń Coulomba</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 10px; background-color: #f4f6f9; color: #333; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; font-size: 1.4rem; margin-bottom: 5px; }
+        p.subtitle { text-align: center; color: #7f8c8d; font-size: 0.85rem; margin-top: 0; margin-bottom: 15px; }
+        .main-layout { display: flex; flex-direction: column; gap: 15px; align-items: center; }
+        .controls { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+        .control-group { background: #f8f9fa; padding: 10px; border-radius: 8px; border-left: 5px solid #3498db; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #34495e; font-size: 0.9rem; }
+        input[type="range"] { width: 100%; margin-bottom: 2px; }
+        .value-display { font-size: 0.85em; color: #e67e22; font-weight: bold; }
+        canvas { background: #2c3e50; border-radius: 8px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); display: block; }
+        .results { padding: 10px; background: #e8f4f8; border-radius: 8px; font-size: 0.95rem; text-align: center; font-weight: bold; }
+        .math-box { font-style: italic; background: #fff; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; border: 1px solid #ddd; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Waga Skręceń Coulomba</h1>
+    <p class="subtitle">Wirtualne laboratorium badawcze – układ pionowy na telefon</p>
+
+    <div class="main-layout">
+        <!-- Wizualizacja graficzna Canvas w pionie (szerokość mniejsza niż wysokość) -->
+        <canvas id="simCanvas" width="360" height="420"></canvas>
+
+        <!-- Panel sterowania parametrami na dole -->
+        <div class="controls">
+            <div class="control-group">
+                <label for="q1">Ładunek kulki zawieszonej (q₁):</label>
+                <input type="range" id="q1" min="-40" max="40" step="1" value="5">
+                <div class="value-display">Wartość: <span id="q1-val">5</span> nC</div>
+            </div>
+
+            <div class="control-group">
+                <label for="q2">Ładunek kulki zbliżanej (q₂):</label>
+                <input type="range" id="q2" min="-40" max="40" step="1" value="5">
+                <div class="value-display">Wartość: <span id="q2-val">5</span> nC</div>
+            </div>
+
+            <div class="control-group">
+                <label for="distance">Odległość początkowa (r):</label>
+                <input type="range" id="distance" min="40" max="160" step="1" value="90">
+                <div class="value-display">Wartość: <span id="dist-val">90</span> mm</div>
+            </div>
+
+            <div class="results">
+                Obliczona Siła Elektrostatyczna:<br>
+                <div class="math-box">F = <span id="force-val">0.00</span> μN</div>
+                <br><span id="force-dir" style="font-size: 0.8em; color: #7f8c8d;"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const k = 8.9875; // Stała elektrostatyczna
+
+    const q1Input = document.getElementById('q1');
+    const q2Input = document.getElementById('q2');
+    const distInput = document.getElementById('distance');
+
+    const q1Val = document.getElementById('q1-val');
+    const q2Val = document.getElementById('q2-val');
+    const distVal = document.getElementById('dist-val');
+    const forceVal = document.getElementById('force-val');
+    const forceDir = document.getElementById('force-dir');
+
+    function updateSimulation() {
+        const q1 = parseFloat(q1Input.value);
+        const q2 = parseFloat(q2Input.value);
+        const r = parseFloat(distInput.value);
+
+        q1Val.innerText = q1;
+        q2Val.innerText = q2;
+        distVal.innerText = r;
+
+        let force = 0;
+        if (r > 0) {
+            force = (k * Math.abs(q1 * q2)) / Math.pow(r / 100, 2);
+        }
+
+        forceVal.innerText = force.toFixed(2);
+        
+        if (q1 * q2 > 0) {
+            forceDir.innerText = "Kuli się odpychają (ładunki jednoimienne)";
+            forceDir.style.color = "#e74c3c";
+        } else if (q1 * q2 < 0) {
+            forceDir.innerText = "Kulki się przyciągają (ładunki różnoimienne)";
+            forceDir.style.color = "#2ecc71";
+        } else {
+            forceDir.innerText = "Brak oddziaływania (jeden z ładunków wynosi 0)";
+            forceDir.style.color = "#7f8c8d";
+        }
+
+        draw(q1, q2, r, force);
+    }
+
+    function draw(q1, q2, r, force) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Oś obrotu wagi przesunięta bliżej dołu pionowego ekranu
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height - 120;
+
+        // 1. Centralny punkt obrotu (nić pionowa wychodzi z tego punktu w stronę widza)
+        ctx.beginPath();
+        ctx.fillStyle = '#f1c40f';
+        ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Kąt obrotu ramienia (zmniejszony mnożnik 0.005 dla sztywniejszego drutu, o który prosiłeś)
+        let angle = 0;
+        if (q1 * q2 !== 0) {
+            const direction = (q1 * q2 > 0) ? 1 : -1;
+            angle = direction * Math.min(force * 0.001, 2); 
+        }
+
+        // Długość ramienia wagi (100px)
+        const armLength = 100;
+        
+        // Wyznaczenie pozycji kulek w układzie pionowym
+        // W stanie spoczynku (angle=0) ramię idzie pionowo w górę
+        const q1X = centerX + armLength * Math.sin(angle);
+        const q1Y = centerY - armLength * Math.cos(angle);
+        
+        const counterX = centerX - armLength * Math.sin(angle);
+        const counterY = centerY + armLength * Math.cos(angle);
+
+        // Belka poprzeczna wagi
+        ctx.beginPath();
+        ctx.strokeStyle = '#bdc3c7';
+        ctx.lineWidth = 4;
+        ctx.moveTo(counterX, counterY);
+        ctx.lineTo(q1X, q1Y);
+        ctx.stroke();
+
+        // Przeciwwaga na dolnym końcu
+        ctx.beginPath();
+        ctx.fillStyle = '#7f8c8d';
+        ctx.arc(counterX, counterY, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 3. Nieruchoma kulka q2 zbliżana od góry w osi pionowej
+        const q2X = centerX;
+        const q2Y = (centerY - armLength) - r;
+
+        // Pionowy tor prowadnicy dla kulki q2
+        ctx.beginPath();
+        ctx.strokeStyle = '#34495e';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.moveTo(centerX, 20);
+        ctx.lineTo(centerX, centerY - armLength - 10);
+        ctx.stroke();
+        ctx.setLineDash([]); // reset
+
+        // Renderowanie kulki q2
+        ctx.beginPath();
+        ctx.fillStyle = q2 >= 0 ? '#e74c3c' : '#3498db';
+        if (q2 === 0) ctx.fillStyle = '#95a5a6';
+        ctx.arc(q2X, q2Y, 12 + Math.abs(q2)*0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#fff';
+        ctx.stroke();
+        
+        ctx.fillStyle = '#fff';
+        ctx.font = '10px Arial';
+        ctx.fillText("q₂", q2X - 5, q2Y + 4);
+
+        // 4. Ruchoma kulka q1 na ramieniu wagi
+        ctx.beginPath();
+        ctx.fillStyle = q1 >= 0 ? '#e74c3c' : '#3498db';
+        if (q1 === 0) ctx.fillStyle = '#95a5a6';
+        ctx.arc(q1X, q1Y, 12 + Math.abs(q1)*0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#fff';
+        ctx.fillText("q₁", q1X - 5, q1Y + 4);
+
+        // 5. Strzałki wektorów sił (poziome przesunięcie linii oddziaływania)
+        if (force > 0.1 && q1 * q2 !== 0) {
+            ctx.beginPath();
+            ctx.strokeStyle = '#f1c40f';
+            ctx.lineWidth = 3;
+            
+            const dir = (q1 * q2 > 0) ? 1 : -1;
+            const arrowLen = Math.min(12 + force * 1.0, 45);
+            
+            // Strzałka przy kulce q1 (pokazuje wychylenie lewo/prawo)
+            ctx.moveTo(q1X, q1Y);
+            ctx.lineTo(q1X + (arrowLen * dir), q1Y);
+            ctx.stroke();
+        }
+
+        // Opis na ekranie
+        ctx.fillStyle = '#95a5a6';
+        ctx.font = '11px Arial';
+        ctx.fillText("Widok z góry – suwak zbliża kulkę pionowo.", 15, canvas.height - 15);
+    }
+
+    q1Input.addEventListener('input', updateSimulation);
+    q2Input.addEventListener('input', updateSimulation);
+    distInput.addEventListener('input', updateSimulation);
+
+    // Pierwsze uruchomienie
+    updateSimulation();
+</script>
+
+</body>
+</html>
