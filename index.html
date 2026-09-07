@@ -189,7 +189,8 @@
         ctx.fillText("q₁", q1X - 5, q1Y + 4);
 
         // 5. Strzałki wektorów sił (poziome przesunięcie linii oddziaływania)
-        if (force > 0.1 && q1 * q2 !== 0) {
+        /*
+		if (force > 0.1 && q1 * q2 !== 0) {
             ctx.beginPath();
             ctx.strokeStyle = '#f1c40f';
             ctx.lineWidth = 3;
@@ -202,7 +203,7 @@
             ctx.lineTo(q1X + (arrowLen * dir), q1Y);
             ctx.stroke();
         }
-
+		*/
         // Opis na ekranie
         ctx.fillStyle = '#95a5a6';
         ctx.font = '11px Arial';
